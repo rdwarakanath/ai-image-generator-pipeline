@@ -1,0 +1,15 @@
+# Models & outputs
+models/
+output/
+*.safetensors
+
+# Python
+__pycache__/
+*.pyc
+
+# Env
+.env
+
+# OS
+.DS_Store
+Thumbs.db
