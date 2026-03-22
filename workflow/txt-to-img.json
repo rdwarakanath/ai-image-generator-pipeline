@@ -20,6 +20,120 @@
     },
     {
       "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        688,
+        -144
+      ],
+      "id": "ecbf7813-a504-42de-b2f4-9fce252d0d7f",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "amount": 40
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        96,
+        -144
+      ],
+      "id": "44525bcd-1e43-4427-be66-b93c2097c423",
+      "name": "Wait",
+      "webhookId": "697869bd-493e-4457-8306-33878a781ee5"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8188/prompt",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"prompt\": {\n    \"1\": {\n      \"class_type\": \"CheckpointLoaderSimple\",\n      \"inputs\": {\n        \"ckpt_name\": \"v1-5-pruned-emaonly.safetensors\"\n      }\n    },\n    \"2\": {\n      \"class_type\": \"CLIPTextEncode\",\n      \"inputs\": {\n        \"text\": \"{{ $json.content }}\",\n        \"clip\": [\"1\", 1]\n      }\n    },\n    \"3\": {\n      \"class_type\": \"CLIPTextEncode\",\n      \"inputs\": {\n        \"text\": \"blurry, low quality\",\n        \"clip\": [\"1\", 1]\n      }\n    },\n    \"4\": {\n      \"class_type\": \"EmptyLatentImage\",\n      \"inputs\": {\n        \"width\": 512,\n        \"height\": 512,\n        \"batch_size\": 1\n      }\n    },\n    \"5\": {\n      \"class_type\": \"KSampler\",\n      \"inputs\": {\n        \"model\": [\"1\", 0],\n        \"positive\": [\"2\", 0],\n        \"negative\": [\"3\", 0],\n        \"latent_image\": [\"4\", 0],\n        \"seed\": 12345,\n        \"steps\": 20,\n        \"cfg\": 8,\n        \"sampler_name\": \"euler\",\n        \"scheduler\": \"normal\",\n        \"denoise\": 1\n      }\n    },\n    \"6\": {\n      \"class_type\": \"VAEDecode\",\n      \"inputs\": {\n        \"samples\": [\"5\", 0],\n        \"vae\": [\"1\", 2]\n      }\n    },\n    \"7\": {\n      \"class_type\": \"SaveImage\",\n      \"inputs\": {\n        \"images\": [\"6\", 0],\n        \"filename_prefix\": \"n8n_output\"\n      }\n    }\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -64,
+        -144
+      ],
+      "id": "96fcb105-f0dc-4c2f-abdd-0648965303e9",
+      "name": "Send prompt to ComfyUI"
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:8188/history/{{$json[\"prompt_id\"]}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        256,
+        -144
+      ],
+      "id": "9131857a-72f6-4bd8-93de-53aae9e6c6ec",
+      "name": "Fetch Image from History"
+    },
+    {
+      "parameters": {
+        "content": "## ENHANCING AND SENDING PROMPT TO COMFY UI",
+        "height": 480,
+        "width": 720,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -656,
+        -320
+      ],
+      "typeVersion": 1,
+      "id": "731acc2f-51ed-434d-bf86-303074d36834",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "##  FETCHES IMAGE USING PROMPT_ID\n",
+        "height": 496,
+        "width": 608,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        208,
+        -320
+      ],
+      "typeVersion": 1,
+      "id": "a8edd129-4832-4deb-bf57-25ffe16942ce",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "78c2b1e7-5b15-4a86-a808-83c0d45a883e",
+              "name": "image_url",
+              "value": "=http://localhost:8188/view?filename={{ $json[$('Send prompt to ComfyUI').item.json.prompt_id].outputs['7'].images[0].filename }}&type=output",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        464,
+        -144
+      ],
+      "id": "b850e434-faf8-427c-9261-d1c7f71da570",
+      "name": "extract image URL"
+    },
+    {
+      "parameters": {
         "modelId": {
           "__rl": true,
           "value": "gemma3:1b",
@@ -44,95 +158,13 @@
         -144
       ],
       "id": "610492e5-06ec-414a-bd7b-a8f1b57dcd0f",
-      "name": "Message a model",
+      "name": "Enhance image prompt",
       "credentials": {
         "ollamaApi": {
           "id": "eUwidbAinTzAB6Vg",
           "name": "Ollama account"
         }
       }
-    },
-    {
-      "parameters": {
-        "options": {}
-      },
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.5,
-      "position": [
-        688,
-        -144
-      ],
-      "id": "ecbf7813-a504-42de-b2f4-9fce252d0d7f",
-      "name": "Respond to Webhook"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "http://host.docker.internal:8188/prompt",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"prompt\": {\n    \"1\": {\n      \"class_type\": \"CheckpointLoaderSimple\",\n      \"inputs\": {\n        \"ckpt_name\": \"v1-5-pruned-emaonly.safetensors\"\n      }\n    },\n    \"2\": {\n      \"class_type\": \"CLIPTextEncode\",\n      \"inputs\": {\n        \"text\": \"{{ $json.content }}\",\n        \"clip\": [\"1\", 1]\n      }\n    },\n    \"3\": {\n      \"class_type\": \"CLIPTextEncode\",\n      \"inputs\": {\n        \"text\": \"blurry, low quality\",\n        \"clip\": [\"1\", 1]\n      }\n    },\n    \"4\": {\n      \"class_type\": \"EmptyLatentImage\",\n      \"inputs\": {\n        \"width\": 512,\n        \"height\": 512,\n        \"batch_size\": 1\n      }\n    },\n    \"5\": {\n      \"class_type\": \"KSampler\",\n      \"inputs\": {\n        \"model\": [\"1\", 0],\n        \"positive\": [\"2\", 0],\n        \"negative\": [\"3\", 0],\n        \"latent_image\": [\"4\", 0],\n        \"seed\": 12345,\n        \"steps\": 20,\n        \"cfg\": 8,\n        \"sampler_name\": \"euler\",\n        \"scheduler\": \"normal\",\n        \"denoise\": 1\n      }\n    },\n    \"6\": {\n      \"class_type\": \"VAEDecode\",\n      \"inputs\": {\n        \"samples\": [\"5\", 0],\n        \"vae\": [\"1\", 2]\n      }\n    },\n    \"7\": {\n      \"class_type\": \"SaveImage\",\n      \"inputs\": {\n        \"images\": [\"6\", 0],\n        \"filename_prefix\": \"n8n_output\"\n      }\n    }\n  }\n}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
-      "position": [
-        -64,
-        -144
-      ],
-      "id": "96fcb105-f0dc-4c2f-abdd-0648965303e9",
-      "name": "HTTP Request"
-    },
-    {
-      "parameters": {
-        "url": "=http://host.docker.internal:8188/history/{{$json[\"prompt_id\"]}}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
-      "position": [
-        256,
-        -144
-      ],
-      "id": "9131857a-72f6-4bd8-93de-53aae9e6c6ec",
-      "name": "HTTP Request1"
-    },
-    {
-      "parameters": {
-        "amount": 40
-      },
-      "type": "n8n-nodes-base.wait",
-      "typeVersion": 1.1,
-      "position": [
-        96,
-        -144
-      ],
-      "id": "44525bcd-1e43-4427-be66-b93c2097c423",
-      "name": "Wait",
-      "webhookId": "697869bd-493e-4457-8306-33878a781ee5"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "78c2b1e7-5b15-4a86-a808-83c0d45a883e",
-              "name": "image_url",
-              "value": "=http://localhost:8188/view?filename={{ $json[$('HTTP Request').item.json.prompt_id].outputs['7'].images[0].filename }}&type=output",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        464,
-        -144
-      ],
-      "id": "b850e434-faf8-427c-9261-d1c7f71da570",
-      "name": "Edit Fields"
     }
   ],
   "pinData": {},
@@ -141,40 +173,7 @@
       "main": [
         [
           {
-            "node": "Message a model",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Message a model": {
-      "main": [
-        [
-          {
-            "node": "HTTP Request",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP Request": {
-      "main": [
-        [
-          {
-            "node": "Wait",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP Request1": {
-      "main": [
-        [
-          {
-            "node": "Edit Fields",
+            "node": "Enhance image prompt",
             "type": "main",
             "index": 0
           }
@@ -185,18 +184,51 @@
       "main": [
         [
           {
-            "node": "HTTP Request1",
+            "node": "Fetch Image from History",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Edit Fields": {
+    "Send prompt to ComfyUI": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Image from History": {
+      "main": [
+        [
+          {
+            "node": "extract image URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extract image URL": {
       "main": [
         [
           {
             "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enhance image prompt": {
+      "main": [
+        [
+          {
+            "node": "Send prompt to ComfyUI",
             "type": "main",
             "index": 0
           }
@@ -208,7 +240,7 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "42db6cb4-1702-46d7-8ab6-2d8a63077327",
+  "versionId": "7111383f-9a0f-4058-94c6-c4d0ce396585",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "b3985cff2688480d1d9c65480ace1e2cb0bb745e79349a17b36cf6566bb39c97"
